@@ -41,6 +41,7 @@ pub fn main() !void {
 
     var it = dir.iterate();
     var entries = std.ArrayList([]const u8).init(std.heap.page_allocator);
+    defer entries.deinit();
 
     while (try it.next()) |dirContent| {
         if (dirContent.name[0] == '.') {
