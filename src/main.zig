@@ -1,4 +1,5 @@
 const std = @import("std");
+const b64 = @import("std").base64;
 
 fn get_cwd(path: std.fs.Dir) ![]u8 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -62,6 +63,12 @@ pub fn main() !void {
             continue;
         };
 
+        const b64_encoder = b64.standard.Encoder;
+        const b64_size = b64_encoder.calcSize(entry.len);
+        const dest = try std.heap.page_allocator.alloc(u8, b64_size);
+        defer std.heap.page_allocator.free(dest);
+        const b64_filename = b64_encoder.encode(dest, entry);
+
         const mode = metadata.mode % 0o1000;
 
         const c: u8 = switch (metadata.kind) {
@@ -74,7 +81,7 @@ pub fn main() !void {
             else => '?',
         };
 
-        try stdout.print("{c} {o} {d:9} {s}\n", .{ c, mode, metadata.size, entry });
+        try stdout.print("{c} {o} {d:9} {s} {s}\n", .{ c, mode, metadata.size, entry, b64_filename });
 
         std.heap.page_allocator.free(entry);
     }
